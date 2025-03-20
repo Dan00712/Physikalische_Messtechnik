@@ -11,6 +11,7 @@ using Distributions
 
 const REJECTION_LIMIT=.05
 
+# Load and Scrub data from tsv file
 df = let 
     f = datadir() |> 
         readdir |> 
@@ -26,6 +27,11 @@ df = let
     end 
 
     headers = headers[2:end]
+    # switch header names to handle the columns better
+    # Rot, digital => rd
+    # Rot, analog  => ra
+    # Gelb, digital => gd
+    # Gelb, analog => ga
     function better_header(head)
         s = ""
         if startswith(head, "Rot")
@@ -59,8 +65,8 @@ function statistic_test(x, y; rejection_limit=0.05)
 
     @assert (length(x) == length(y)) "Same size of the vectors is required"
     N = length(x)
-    t = sqrt(N/(sx^2 + sy^2)) * (x̄-ȳ)
-    @debug "t" (t)
+    t = sqrt(N/(sx^2 + sy^2)) * (x̄-ȳ)   # Calculate t-Value for two datasets with same length
+    @info "t" (t)
 
     df = let 
         sx_ = sx^2/N 
@@ -68,11 +74,11 @@ function statistic_test(x, y; rejection_limit=0.05)
 
         (sx_ + sy_)^2 /(sx_^2/(N-1) + sy_^2/(N-1))
     end # Welch-Satterthwaite approximation
-    @debug "" df
+    @info "" df
     student = TDist(df) # Student T distribution
 
-    p = 2*ccdf(student, abs(t)) # more numberically stable than 1-cdf(...)
-    @debug "p" (p)
+    p = 2*ccdf(student, abs(t)) # equivalent to 2*(1-cdf(...)) more numberically stable
+    @info "p" (p)
     if p > rejection_limit
         @info "H₀ is not rejected"
         true
@@ -88,7 +94,7 @@ vs = [
     for (h1, h2) in testing_pairs
 ]
 
-if all(vs)
+if all(vs)  # H₀ can be rejected a single Pair of datasets reject H₀
     println("TRUE:: null hypothesis cannot be rejected")
 else
     println("FALSE:null hypothesis rejected")
