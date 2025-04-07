@@ -2,7 +2,9 @@ using Plots, Distributions
 
 λ = 40		# Bq; expected value
 p = Poisson(λ)
-println(ccdf(p, 50))
+# 1 - P(X >= 50) = 1 - cdf(50) = ccdf(49)
+# ccdf(x) := P(X > x)
+println(ccdf(p, 49))
 
 k = 0:80 		# plot range
 ps = pdf.([p], k)
